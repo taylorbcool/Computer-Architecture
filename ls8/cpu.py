@@ -7,7 +7,9 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.ram = [0] * 256
+        self.reg = [0] * 8
+        self.pc = 0
 
     def load(self):
         """Load a program into memory."""
@@ -30,6 +32,11 @@ class CPU:
             self.ram[address] = instruction
             address += 1
 
+    def ram_read(self, address):
+        return self.ram[address]
+
+    def ram_write(self, address, value):
+        self.ram[address] = value
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -62,4 +69,29 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        # Load immediate, store a value in a register, 'set this register to this value'
+        LDI = 0b10000010
+        # prints numeric value stored in register
+        PRN = 0b01000111
+        # halt cpu, exit emulator
+        HLT = 0b0000001
+
+        running = True
+        while running:
+            IR = self.ram_read(self.pc)
+            operand_a = self.ram_read(self.pc + 1)
+            operand_b = self.ram_read(self.pc + 2)
+
+            if IR == LDI:
+                self.reg[operand_a] = operand_b
+                self.pc += 3
+
+            elif IR == PRN:
+                print(self.reg[operand_a])
+                self.pc += 2
+
+            elif IR == HLT:
+                running = False
+
+            else:
+                self.pc += 1
