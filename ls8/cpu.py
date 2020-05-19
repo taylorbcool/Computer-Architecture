@@ -13,24 +13,29 @@ class CPU:
 
     def load(self):
         """Load a program into memory."""
+        if len(sys.argv) is not 2:
+            print("Must include filename")
+            sys.exit(1)
 
         address = 0
 
         # For now, we've just hardcoded a program:
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
+        program = sys.argv[1]
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        with open(program) as prog:
+            for line in prog:
+                line = line.strip()
+                split = line.split('#')[0]
+                if split == '':
+                    continue
+                value = int(split, 2)
+                self.ram[address] = value
+                address += 1
+
+        # for instruction in program:
+        #     self.ram[address] = instruction
+        #     address += 1
 
     def ram_read(self, address):
         return self.ram[address]
@@ -43,7 +48,12 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        #elif op == "SUB": etc
+        elif op == "SUB":
+            self.reg[reg_a] -= self.reg[reg_b]
+        elif op == "MUL":
+            self.reg[reg_a] *= self.reg[reg_b]
+        elif op == "DIV":
+            self.reg[reg_a] /= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -73,6 +83,8 @@ class CPU:
         LDI = 0b10000010
         # prints numeric value stored in register
         PRN = 0b01000111
+        # does multiplication(?)
+        MUL = 0b10100010
         # halt cpu, exit emulator
         HLT = 0b0000001
 
@@ -89,6 +101,10 @@ class CPU:
             elif IR == PRN:
                 print(self.reg[operand_a])
                 self.pc += 2
+
+            elif IR == MUL:
+                self.alu('MUL', operand_a, operand_b)
+                self.pc += 3
 
             elif IR == HLT:
                 running = False
