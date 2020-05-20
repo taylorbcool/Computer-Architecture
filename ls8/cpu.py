@@ -19,8 +19,6 @@ class CPU:
 
         address = 0
 
-        # For now, we've just hardcoded a program:
-
         program = sys.argv[1]
 
         with open(program) as prog:
@@ -85,6 +83,11 @@ class CPU:
         PRN = 0b01000111
         # does multiplication(?)
         MUL = 0b10100010
+        # pushing and popping
+        PUSH = 0b01000101
+        POP  = 0b01000110
+        # stack pointer
+        SP = 255
         # halt cpu, exit emulator
         HLT = 0b0000001
 
@@ -105,6 +108,16 @@ class CPU:
             elif IR == MUL:
                 self.alu('MUL', operand_a, operand_b)
                 self.pc += 3
+
+            elif IR == PUSH:
+                SP -= 1
+                self.ram_write(SP, self.reg[operand_a])
+                self.pc += 2
+
+            elif IR == POP:
+                self.reg[operand_a] = self.ram[SP]
+                SP += 1
+                self.pc += 2
 
             elif IR == HLT:
                 running = False
