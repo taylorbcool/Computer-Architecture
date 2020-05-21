@@ -83,9 +83,14 @@ class CPU:
         PRN = 0b01000111
         # does multiplication(?)
         MUL = 0b10100010
+        # add
+        ADD = 0b10100000
         # pushing and popping
         PUSH = 0b01000101
         POP  = 0b01000110
+        # call and return
+        CALL = 0b01010000
+        RET = 0b00010001
         # stack pointer
         SP = 255
         # halt cpu, exit emulator
@@ -109,6 +114,10 @@ class CPU:
                 self.alu('MUL', operand_a, operand_b)
                 self.pc += 3
 
+            elif IR == ADD:
+                self.alu('ADD', operand_a, operand_b)
+                self.pc += 3
+
             elif IR == PUSH:
                 SP -= 1
                 self.ram_write(SP, self.reg[operand_a])
@@ -118,6 +127,16 @@ class CPU:
                 self.reg[operand_a] = self.ram[SP]
                 SP += 1
                 self.pc += 2
+
+            elif IR == CALL:
+                value = self.pc + 2
+                SP -= 1
+                self.ram[SP] = value
+                self.pc = self.reg[operand_a]
+            
+            elif IR == RET:
+                self.pc = self.ram[SP]
+                SP += 1
 
             elif IR == HLT:
                 running = False
