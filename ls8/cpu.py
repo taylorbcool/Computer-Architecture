@@ -10,6 +10,7 @@ class CPU:
         self.ram = [0] * 256
         self.reg = [0] * 8
         self.pc = 0
+        self.fl = 0b00000000
 
     def load(self):
         """Load a program into memory."""
@@ -52,6 +53,13 @@ class CPU:
             self.reg[reg_a] *= self.reg[reg_b]
         elif op == "DIV":
             self.reg[reg_a] /= self.reg[reg_b]
+        elif op == 'CMP':
+            if self.reg[reg_a] > self.reg[reg_b]:
+                self.fl = 0b00000010
+            elif self.reg[reg_a] < self.reg[reg_b]:
+                self.fl = 0b00000100
+            elif self.reg[reg_a] == self.reg[reg_b]:
+                self.fl = 0b00000001
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -63,7 +71,7 @@ class CPU:
 
         print(f"TRACE: %02X | %02X %02X %02X |" % (
             self.pc,
-            #self.fl,
+            self.fl,
             #self.ie,
             self.ram_read(self.pc),
             self.ram_read(self.pc + 1),
@@ -85,12 +93,18 @@ class CPU:
         MUL = 0b10100010
         # add
         ADD = 0b10100000
+        # comparing
+        CMP = 0b10100111
         # pushing and popping
         PUSH = 0b01000101
         POP  = 0b01000110
         # call and return
         CALL = 0b01010000
         RET = 0b00010001
+        # jump commands
+        JMP = 0b01010100
+        JEQ = 0b01010101
+        JNE = 0b01010110
         # stack pointer
         SP = 255
         # halt cpu, exit emulator
@@ -118,6 +132,10 @@ class CPU:
                 self.alu('ADD', operand_a, operand_b)
                 self.pc += 3
 
+            elif IR == CMP:
+                self.alu('CMP', operand_a, operand_b)
+                self.pc += 3
+
             elif IR == PUSH:
                 SP -= 1
                 self.ram_write(SP, self.reg[operand_a])
@@ -137,6 +155,21 @@ class CPU:
             elif IR == RET:
                 self.pc = self.ram[SP]
                 SP += 1
+
+            elif IR == JMP:
+                self.pc = self.reg[operand_a]
+
+            elif IR == JEQ:
+                if self.fl == 0b00000001:
+                    self.pc = self.reg[operand_a]
+                else:
+                    self.pc += 2
+                
+            elif IR == JNE:
+                if self.fl != 0b00000001:
+                    self.pc = self.reg[operand_a]
+                else:
+                    self.pc += 2
 
             elif IR == HLT:
                 running = False
